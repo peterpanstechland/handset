@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "handset.cellular",
+  "name": "Mobile data",
+  "version": "0.1.0",
+  "author": "peterpan",
+  "description": "Mobile data, texts, and calls for a ModemManager modem, with a button that opens Phone.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "Mobile data",
+    "description": "Turn cellular data on or off. The modem stays up, so texts still arrive. Answer, hang up, and open Phone from the same menu.",
+    "category": "Network",
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "defaults": {
+      "connection": "4g"
+    },
+    "schema": [
+      {
+        "key": "connection",
+        "type": "string",
+        "label": "Connection name",
+        "defaultValue": "4g"
+      }
+    ]
+  }
+}

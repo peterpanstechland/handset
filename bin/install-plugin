@@ -1,0 +1,87 @@
+#!/bin/sh
+# Copy the cellular bar into this user's Omarchy config and put it on the bar.
+set -eu
+
+ID=handset.cellular
+CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}"
+DEST="$CONFIG/omarchy/plugins/$ID"
+HERE="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+
+if [ -f "$HERE/../plugin/manifest.json" ]; then
+  SRC="$(CDPATH= cd -- "$HERE/../plugin" && pwd)"
+elif [ -f /usr/share/handset/plugin/manifest.json ]; then
+  SRC=/usr/share/handset/plugin
+else
+  echo "handset: cellular plugin files not found" >&2
+  exit 1
+fi
+
+if [ -e "$DEST/manifest.json" ]; then
+  existing="$(jq -r '.id // empty' "$DEST/manifest.json" 2>/dev/null || true)"
+  if [ -n "$existing" ] && [ "$existing" != "$ID" ]; then
+    echo "handset: $DEST is plugin '$existing', not $ID" >&2
+    exit 1
+  fi
+fi
+if [ -d "$DEST/.git" ]; then
+  echo "handset: $DEST is a git checkout. Update it there, or remove it and run this again." >&2
+  exit 1
+fi
+
+mkdir -p "$DEST"
+find "$DEST" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+tar -C "$SRC" -cf - . | tar -C "$DEST" -xf -
+echo "Installed $ID into $DEST"
+
+if ! command -v omarchy-shell >/dev/null 2>&1; then
+  echo "Enable it once Omarchy is running: omarchy plugin enable $ID --section right --before omarchy.network"
+  exit 0
+fi
+
+omarchy-shell shell rescanPlugins >/dev/null 2>&1 || true
+
+shell_json="$CONFIG/omarchy/shell.json"
+if [ -f "$shell_json" ] && jq -e --arg id "$ID" '[.. | objects | select(.id? == $id)] | length > 0' "$shell_json" >/dev/null 2>&1; then
+  echo "The 4G button is already on the bar."
+  exit 0
+fi
+
+discovered=0
+i=0
+while [ "$i" -lt 50 ]; do
+  if omarchy plugin list --json 2>/dev/null | jq -e --arg id "$ID" 'any(.[]; .id == $id)' >/dev/null 2>&1; then
+    discovered=1
+    break
+  fi
+  i=$((i + 1))
+  sleep 0.1
+done
+
+if [ "$discovered" -ne 1 ]; then
+  echo "handset: the shell has not seen $ID yet. Enable it with: omarchy plugin enable $ID --section right --before omarchy.network" >&2
+  exit 1
+fi
+
+# Copying the plugin reloads the shell, and that reload can eat the first
+# enable call even after the bar layout was saved. Retry, and stop once the
+# button is in shell.json.
+enabled=0
+attempt=0
+while [ "$attempt" -lt 5 ]; do
+  if omarchy plugin enable "$ID" --section right --before omarchy.network; then
+    enabled=1
+    break
+  fi
+  if [ -f "$shell_json" ] && jq -e --arg id "$ID" '[.. | objects | select(.id? == $id)] | length > 0' "$shell_json" >/dev/null 2>&1; then
+    enabled=1
+    break
+  fi
+  attempt=$((attempt + 1))
+  sleep 1
+done
+
+if [ "$enabled" -ne 1 ]; then
+  echo "handset: could not put $ID on the bar. Run: omarchy plugin enable $ID --section right --before omarchy.network" >&2
+  exit 1
+fi
+echo "The 4G button is on the bar, beside Network."

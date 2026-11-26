@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Phone
+Name[da]=Telefon
+Comment=Place and answer calls on the 4G modem
+Comment[da]=Ring op og svar med 4G-modemmet
+Exec=handset
+Icon=handset
+Terminal=false
+Categories=Network;Telephony;
+StartupWMClass=handset

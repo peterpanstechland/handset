@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="Main.qml">Main.qml</file>
+        <file alias="DialPad.qml">DialPad.qml</file>
+        <file alias="CallScreen.qml">CallScreen.qml</file>
+        <file alias="ContactPage.qml">ContactPage.qml</file>
+        <file alias="RecentPage.qml">RecentPage.qml</file>
+        <file alias="KeyButton.qml">KeyButton.qml</file>
+        <file alias="i18n/en.json">i18n/en.json</file>
+        <file alias="i18n/da.json">i18n/da.json</file>
+    </qresource>
+</RCC>

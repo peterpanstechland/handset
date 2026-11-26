@@ -1,0 +1,19 @@
+#!/bin/sh
+# Build Phone and install it for this user, then install the 4G bar.
+# No root password. A system package is pkgbuild/ plus makepkg -si.
+set -eu
+
+ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+"$ROOT/bin/build"
+
+prefix="${HOME}/.local"
+install -Dm755 "$ROOT/build/handset" "$prefix/bin/handset"
+install -Dm644 "$ROOT/pkgbuild/handset.desktop" "$prefix/share/applications/handset.desktop"
+install -Dm644 "$ROOT/pkgbuild/handset.svg" "$prefix/share/icons/hicolor/scalable/apps/handset.svg"
+
+if command -v update-desktop-database >/dev/null 2>&1; then
+  update-desktop-database "$prefix/share/applications" >/dev/null 2>&1 || true
+fi
+
+"$ROOT/bin/install-plugin"
+echo "Phone is in the launcher. Open it from there, or from the 4G menu."

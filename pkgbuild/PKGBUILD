@@ -1,0 +1,31 @@
+pkgname=handset
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Phone, texts, and mobile data for a ModemManager 4G modem'
+arch=('x86_64' 'aarch64')
+license=('MIT')
+depends=('qt6-base' 'qt6-declarative' 'qt6-wayland' 'modemmanager' 'python' 'jq')
+makedepends=('gcc' 'make' 'qt6-tools')
+# Build the checkout this PKGBUILD lives in. From a clone:
+#   cd pkgbuild && makepkg -si && handset-bar
+source=()
+sha256sums=()
+
+build() {
+  cd "$startdir/.."
+  ./bin/build
+}
+
+package() {
+  cd "$startdir/.."
+  install -Dm755 build/handset "$pkgdir/usr/bin/handset"
+  install -Dm755 bin/install-plugin "$pkgdir/usr/bin/handset-bar"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 "$startdir/handset.svg" "$pkgdir/usr/share/icons/hicolor/scalable/apps/handset.svg"
+  install -Dm644 "$startdir/handset.desktop" "$pkgdir/usr/share/applications/handset.desktop"
+
+  while IFS= read -r -d '' file; do
+    rel="${file#plugin/}"
+    install -Dm644 "$file" "$pkgdir/usr/share/handset/plugin/$rel"
+  done < <(find plugin -type f -print0)
+}
